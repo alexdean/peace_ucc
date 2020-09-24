@@ -1,0 +1,4 @@
+__pycache__
+experiments/
+.DS_Store
+arduino_tally_light/arduino_secrets.h
