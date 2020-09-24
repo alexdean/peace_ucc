@@ -63,3 +63,8 @@ def script_load(settings):
 
   obs.timer_add(heartbeat, heartbeat_ms)
   obs.script_log(obs.LOG_INFO, 'adding heartbeat timer.')
+
+def script_unload():
+  global base_url
+
+  make_request(base_url + '/OFF')
