@@ -2,7 +2,7 @@ import obspython as obs
 import urllib.request
 
 watched_source = 'Camera A'
-base_url = 'http://10.4.2.11'
+base_url = 'http://10.4.2.12'
 heartbeat_ms = 4000
 
 def script_description():
