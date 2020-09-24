@@ -48,6 +48,8 @@ def script_load(settings):
 
   obs.script_log(obs.LOG_INFO, 'now watching ' + watched_source)
 
+  make_request(base_url + '/OFF')
+
   obs_signal_handler = obs.obs_get_signal_handler()
 
   obs.signal_handler_connect(
