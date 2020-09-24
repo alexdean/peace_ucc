@@ -4,6 +4,7 @@ import urllib.request
 watched_source = 'Camera B'
 base_url = 'http://10.4.2.13'
 heartbeat_ms = 4000
+current_url = None
 
 def script_description():
   return """
@@ -11,29 +12,31 @@ def script_description():
   """
 
 def camera_activated(obs_calldata):
-  signal_receiver(obs_calldata, '/ON')
+  signal_receiver(obs_calldata, '/GREEN')
 
 def camera_deactivated(obs_calldata):
-  signal_receiver(obs_calldata, '/OFF')
+  signal_receiver(obs_calldata, '/RED')
 
 def signal_receiver(obs_calldata, endpoint, postbody=None):
   global watched_source
   global base_url
+  global current_url
 
   source = obs.calldata_source(obs_calldata, "source")
   source_name = obs.obs_source_get_name(source)
 
   if source_name == watched_source:
     url = base_url + endpoint
+    current_url = url
     obs.script_log(obs.LOG_INFO, url)
     make_request(url)
 
 def heartbeat():
-  global base_url
+  global current_url
 
-  url = base_url + '/HB'
-  # obs.script_log(obs.LOG_INFO, url)
-  make_request(url)
+  if current_url != None:
+    # obs.script_log(obs.LOG_INFO, url)
+    make_request(current_url)
 
 def make_request(url):
   try:
@@ -45,10 +48,13 @@ def make_request(url):
 def script_load(settings):
   global watched_source
   global heartbeat_ms
+  global current_url
+  global base_url
 
   obs.script_log(obs.LOG_INFO, 'now watching ' + watched_source)
 
-  make_request(base_url + '/OFF')
+  current_url = base_url + '/RED'
+  make_request(current_url)
 
   obs_signal_handler = obs.obs_get_signal_handler()
 
@@ -69,4 +75,4 @@ def script_load(settings):
 def script_unload():
   global base_url
 
-  make_request(base_url + '/OFF')
+  make_request(base_url + '/RED')
