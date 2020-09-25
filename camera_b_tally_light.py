@@ -1,7 +1,7 @@
 import obspython as obs
-from obs_change_notifier import ObsChangeNotifier
+from obs_change_notifier import OBSChangeNotifier
 
-client = ObsChangeNotifier(
+client = OBSChangeNotifier(
              obs=obs,
              watched_source='Camera B',
              base_url='http://10.4.2.13',

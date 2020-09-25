@@ -1,6 +1,13 @@
 import urllib.request
 
-class ObsChangeNotifier:
+# watch a given source in OBS, and notify an HTTP service when OBS emits signals
+# related to that source.
+#
+# @example: When source 'Camera A' is made live, a GET request will be sent to http://192.168.1.10/LIVE.
+#
+#   notifier = ObsChangeNotifier(watched_source='Camera A', base_url='http://192.168.1.10')
+#   notifier.connect('source_activate', '/LIVE')
+class OBSChangeNotifier:
   def __init__(self, obs, watched_source, base_url, heartbeat_interval):
     self.obs = obs
     # self.obs.script_log(self.obs.LOG_INFO, '__init__()')
