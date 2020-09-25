@@ -1,78 +1,27 @@
 import obspython as obs
-import urllib.request
+from tally_light_client import TallyLightClient
 
-watched_source = 'Camera A'
-base_url = 'http://10.4.2.12'
-heartbeat_ms = 4000
-current_url = None
+client = TallyLightClient(
+             obs=obs,
+             watched_source='Camera A',
+             base_url='http://10.4.2.12',
+             heartbeat_interval=4000
+           )
 
 def script_description():
-  return """
-    Tally light management for Camera A.
-  """
+  global client
 
-def camera_activated(obs_calldata):
-  signal_receiver(obs_calldata, '/GREEN')
+  return "Tally light management for " + client.watched_source
 
-def camera_deactivated(obs_calldata):
-  signal_receiver(obs_calldata, '/RED')
-
-def signal_receiver(obs_calldata, endpoint, postbody=None):
-  global watched_source
-  global base_url
-  global current_url
-
-  source = obs.calldata_source(obs_calldata, "source")
-  source_name = obs.obs_source_get_name(source)
-
-  if source_name == watched_source:
-    url = base_url + endpoint
-    current_url = url
-    obs.script_log(obs.LOG_INFO, url)
-    make_request(url)
-
-def heartbeat():
-  global current_url
-
-  if current_url != None:
-    # obs.script_log(obs.LOG_INFO, url)
-    make_request(current_url)
-
-def make_request(url):
-  try:
-    urllib.request.urlopen(url, None, 1)
-  except urllib.error.URLError as e:
-    obs.script_log(obs.LOG_INFO, 'ERROR: ' + url)
-
-# called when properties are updated
 def script_load(settings):
-  global watched_source
-  global heartbeat_ms
-  global current_url
-  global base_url
+  global client
 
-  obs.script_log(obs.LOG_INFO, 'now watching ' + watched_source)
+  client.connect('source_activate', '/GREEN')
+  client.connect('source_deactivate', '/RED')
 
-  current_url = base_url + '/RED'
-  make_request(current_url)
-
-  obs_signal_handler = obs.obs_get_signal_handler()
-
-  obs.signal_handler_connect(
-    obs_signal_handler,
-    'source_activate',
-    camera_activated
-  )
-  obs.signal_handler_connect(
-    obs_signal_handler,
-    'source_deactivate',
-    camera_deactivated
-  )
-
-  obs.timer_add(heartbeat, heartbeat_ms)
-  obs.script_log(obs.LOG_INFO, 'adding heartbeat timer.')
+  client.set_current('/RED')
 
 def script_unload():
-  global base_url
+  global client
 
-  make_request(base_url + '/RED')
+  client.set_current('/RED')
