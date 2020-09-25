@@ -1,6 +1,6 @@
 import urllib.request
 
-class TallyLightClient:
+class ObsChangeNotifier:
   def __init__(self, obs, watched_source, base_url, heartbeat_interval):
     self.obs = obs
     # self.obs.script_log(self.obs.LOG_INFO, '__init__()')

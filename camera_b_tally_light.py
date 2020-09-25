@@ -1,7 +1,7 @@
 import obspython as obs
-from tally_light_client import TallyLightClient
+from obs_change_notifier import ObsChangeNotifier
 
-client = TallyLightClient(
+client = ObsChangeNotifier(
              obs=obs,
              watched_source='Camera B',
              base_url='http://10.4.2.13',
