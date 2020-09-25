@@ -8,7 +8,7 @@ import urllib.request
 #   notifier = ObsChangeNotifier(watched_source='Camera A', base_url='http://192.168.1.10')
 #   notifier.connect('source_activate', '/LIVE')
 class OBSChangeNotifier:
-  def __init__(self, obs, watched_source, base_url, heartbeat_interval):
+  def __init__(self, obs, watched_source, base_url, heartbeat_interval=None):
     self.obs = obs
     self.watched_source = watched_source
     self.base_url = base_url
@@ -17,7 +17,8 @@ class OBSChangeNotifier:
     self.signal_handler_data = []
     self.current_endpoint = None
 
-    self.obs.timer_add(self.send_heartbeat, heartbeat_interval)
+    if heartbeat_interval:
+      self.obs.timer_add(self.send_heartbeat, heartbeat_interval)
 
   def watched_source(self):
     return self.watched_source
@@ -37,9 +38,9 @@ class OBSChangeNotifier:
 
   # connect an obs signal to a remote endpoint which should be requested when
   # the given signal is received.
-  def connect(self, obs_signal, endpoint):
+  def connect(self, obs_signal, endpoint, postbody=None):
     obs_signal_handler = self.obs.obs_get_signal_handler()
-    callback = (lambda obs_calldata: self.signal_receiver(obs_calldata, endpoint))
+    callback = (lambda obs_calldata: self.signal_receiver(obs_calldata, endpoint, postbody))
 
     data = {
       'obs_signal': obs_signal,
@@ -67,23 +68,31 @@ class OBSChangeNotifier:
   #
   # if the emitted source matches the source we are tracking,
   # update the endpoint we're currently pinging.
-  def signal_receiver(self, obs_calldata, endpoint):
+  def signal_receiver(self, obs_calldata, endpoint, postbody=None):
     source = self.obs.calldata_source(obs_calldata, "source")
     source_name = self.obs.obs_source_get_name(source)
 
     if source_name == self.watched_source:
-      self.set_current(endpoint)
+      self.set_current(endpoint, postbody)
 
   # unconditionally set which endpoint we are currently pinging
-  def set_current(self, endpoint):
+  def set_current(self, endpoint, postbody=None):
     self.current_endpoint = endpoint
-    self.send_update(endpoint)
+    self.send_update(endpoint, postbody)
 
   # make an HTTP request for the specified endpoint
-  def send_update(self, endpoint):
+  def send_update(self, endpoint, postbody=None):
     url = self.base_url + endpoint
 
+    if postbody != None:
+      method = 'POST'
+      data = urllib.parse.urlencode(postbody).encode()
+    else:
+      method = 'GET'
+      data = None
+
     try:
-      urllib.request.urlopen(url, None, 1)
+      request = urllib.request.Request(url, data=data, method=method)
+      urllib.request.urlopen(request, None, 1)
     except urllib.error.URLError as e:
       self.obs.script_log(self.obs.LOG_INFO, 'ERROR: ' + url)
