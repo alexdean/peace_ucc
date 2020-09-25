@@ -10,15 +10,13 @@ import urllib.request
 class OBSChangeNotifier:
   def __init__(self, obs, watched_source, base_url, heartbeat_interval):
     self.obs = obs
-    # self.obs.script_log(self.obs.LOG_INFO, '__init__()')
     self.watched_source = watched_source
     self.base_url = base_url
-    # self.heartbeat_endpoint = None
-    # self.heartbeat_every = float('inf')
-    # self.last_updated_at = time.time()
-    self.signal_handler_data = []
     self.heartbeat_interval = heartbeat_interval
+
+    self.signal_handler_data = []
     self.current_endpoint = None
+
     self.obs.timer_add(self.send_heartbeat, heartbeat_interval)
 
   def watched_source(self):
@@ -62,7 +60,6 @@ class OBSChangeNotifier:
   # of pings ceases. prevents false readings if OBS exits or if network
   # connectivity is interrupted.
   def send_heartbeat(self):
-    # self.obs.script_log(self.obs.LOG_DEBUG, 'send_heartbeat()')
     if self.current_endpoint != None:
       self.send_update(self.current_endpoint)
 
@@ -90,5 +87,3 @@ class OBSChangeNotifier:
       urllib.request.urlopen(url, None, 1)
     except urllib.error.URLError as e:
       self.obs.script_log(self.obs.LOG_INFO, 'ERROR: ' + url)
-
-    # self.obs.script_log(self.obs.LOG_DEBUG, 'send_update: ' + endpoint)
