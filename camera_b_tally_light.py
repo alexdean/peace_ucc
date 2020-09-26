@@ -2,11 +2,10 @@ import obspython as obs
 from obs_change_notifier import OBSChangeNotifier
 
 client = OBSChangeNotifier(
-             obs=obs,
-             watched_source='Camera B',
-             base_url='http://10.4.2.13',
-             heartbeat_interval=4000
-           )
+           obs=obs,
+           watched_source='Camera B',
+           base_url='http://10.4.2.13'
+         )
 
 def script_description():
   global client
@@ -18,8 +17,8 @@ def script_load(settings):
 
   client.connect('source_activate', '/GREEN')
   client.connect('source_deactivate', '/RED')
-
   client.set_current('/RED')
+  client.begin_heartbeats(interval=4000)
 
 def script_unload():
   global client

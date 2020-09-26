@@ -8,17 +8,13 @@ import urllib.request
 #   notifier = ObsChangeNotifier(watched_source='Camera A', base_url='http://192.168.1.10')
 #   notifier.connect('source_activate', '/LIVE')
 class OBSChangeNotifier:
-  def __init__(self, obs, watched_source, base_url, heartbeat_interval=None):
+  def __init__(self, obs, watched_source, base_url):
     self.obs = obs
     self.watched_source = watched_source
     self.base_url = base_url
-    self.heartbeat_interval = heartbeat_interval
 
     self.signal_handler_data = []
     self.current_endpoint = None
-
-    if heartbeat_interval:
-      self.obs.timer_add(self.send_heartbeat, heartbeat_interval)
 
   def watched_source(self):
     return self.watched_source
@@ -54,6 +50,10 @@ class OBSChangeNotifier:
       obs_signal,
       callback
     )
+
+  # create a timer to periodically re-request our current_endpoint
+  def begin_heartbeats(self, interval=4000):
+    self.obs.timer_add(self.send_heartbeat, interval)
 
   # invoked on a timer. repeatedly ping the current endpoint.
   #
