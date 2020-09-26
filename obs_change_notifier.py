@@ -1,4 +1,5 @@
 import urllib.request
+import socket
 from datetime import datetime
 
 # watch a given source in OBS, and notify an HTTP service when OBS emits signals
