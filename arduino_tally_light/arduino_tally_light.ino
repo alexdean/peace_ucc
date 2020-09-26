@@ -26,9 +26,35 @@ WiFiServer server(80);
 unsigned long last_wifi_status_check_at = 0;
 const unsigned long WIFI_STATUS_CHECK_INTERVAL = 30 * 1000;
 
+unsigned long request_counter = 0;
+
+#ifdef __arm__
+// should use uinstd.h to define sbrk but Due causes a conflict
+extern "C" char* sbrk(int incr);
+#else  // __ARM__
+extern char *__brkval;
+#endif  // __arm__
+
+int freeMemory() {
+  char top;
+#ifdef __arm__
+  return &top - reinterpret_cast<char*>(sbrk(0));
+#elif defined(CORE_TEENSY) || (ARDUINO > 103 && ARDUINO != 151)
+  return &top - __brkval;
+#else  // __arm__
+  return __brkval ? &top - __brkval : &top - __malloc_heap_start;
+#endif  // __arm__
+}
+
 // connect wifi and start HTTP server if needed.
 // includes polling behavior, so will only re-check every WIFI_STATUS_CHECK_INTERVAL unless forced.
 void restartNetworkingIfNeeded(bool forceCheck = false) {
+  // hypothesis: connection losses due to wifi checks. (they seem to happen for about 30s)
+  // disable the timed checks to see if that helps.
+  if (!forceCheck) {
+    return;
+  }
+
   now = millis();
   if (forceCheck || ((now - last_wifi_status_check_at) >= WIFI_STATUS_CHECK_INTERVAL)) {
     wifi_status = WiFi.status();
@@ -50,14 +76,14 @@ void restartNetworkingIfNeeded(bool forceCheck = false) {
       }
 
       server.begin();
-      Serial.println("started server.");
+      // Serial.println("started server.");
 
       // use green pin to indicate wifi is connected.
       digitalWrite(greenPin, HIGH);
       delay(500);
       digitalWrite(greenPin, LOW);
     } else {
-      Serial.println("wifi check OK.");
+      // Serial.println("wifi check OK.");
     }
 
     last_wifi_status_check_at = millis();
@@ -68,7 +94,7 @@ void setup() {
   IPAddress ip;
   byte mac[6];
 
-  Serial.begin(9600);      // initialize serial communication
+  // Serial.begin(9600);      // initialize serial communication
   //  while (!Serial) ;
 
   pinMode(redPin,   OUTPUT);
@@ -105,13 +131,24 @@ void setup() {
 
   restartNetworkingIfNeeded(true);
 
-  printWifiStatus();
+  // printWifiStatus();
 }
 
 void loop() {
+  // // debug wifi connection strength.
+  // long rssi = WiFi.RSSI();
+  // Serial.print("signal strength (RSSI):");
+  // Serial.print(rssi);
+  // Serial.println(" dBm");
+  // delay(500);
+  // restartNetworkingIfNeeded();
+  // return;
+
   WiFiClient client = server.available();
 
   if (client) {
+    request_counter += 1;
+
     String currentLine = "";
     while (client.connected()) {
       if (client.available()) {
@@ -123,9 +160,12 @@ void loop() {
             // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
             // and a content-type so the client knows what's coming, then a blank line:
             client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
+            client.println("Content-type: text/plain");
             client.println();
-
+            client.print("mem:");
+            client.println(freeMemory()); // print amount of free memory
+            client.print("reqs:");
+            client.println(request_counter);
             // The HTTP response ends with another blank line:
             client.println();
             // break out of the while loop:

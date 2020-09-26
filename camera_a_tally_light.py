@@ -4,7 +4,8 @@ from obs_change_notifier import OBSChangeNotifier
 client = OBSChangeNotifier(
            obs=obs,
            watched_source='Camera A',
-           base_url='http://10.4.2.12'
+           base_url='http://10.4.2.12',
+           debug_heartbeats=True
          )
 
 def script_description():

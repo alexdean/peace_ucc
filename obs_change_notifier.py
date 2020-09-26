@@ -10,10 +10,15 @@ from datetime import datetime
 #   notifier = ObsChangeNotifier(watched_source='Camera A', base_url='http://192.168.1.10')
 #   notifier.connect('source_activate', '/LIVE')
 class OBSChangeNotifier:
-  def __init__(self, obs, watched_source, base_url):
+  def __init__(self, obs, watched_source, base_url, debug_heartbeats=False):
     self.obs = obs
     self.watched_source = watched_source
     self.base_url = base_url
+
+    self.debug_heartbeats = debug_heartbeats
+    self.heartbeat_count = 0
+    self.init_at = datetime.now()
+    self.last_heartbeat_at = None
 
     self.signal_handler_data = []
     self.current_endpoint = None
@@ -55,6 +60,7 @@ class OBSChangeNotifier:
 
   # create a timer to periodically re-request our current_endpoint
   def begin_heartbeats(self, interval=4000):
+    self.last_heartbeat_at = datetime.now()
     self.obs.timer_add(self.send_heartbeat, interval)
 
   # invoked on a timer. repeatedly ping the current endpoint.
@@ -64,6 +70,20 @@ class OBSChangeNotifier:
   # connectivity is interrupted.
   def send_heartbeat(self):
     if self.current_endpoint != None:
+      if self.debug_heartbeats:
+        now = datetime.now()
+        since_prev = str(now - self.last_heartbeat_at)
+        since_init = str(now - self.init_at)
+        hb = str(self.heartbeat_count)
+        if self.watched_source == 'Camera A':
+          spacer = ''
+        else:
+          spacer = '                                                          '
+
+        self.obs.script_log(self.obs.LOG_INFO, now.strftime('%H:%M:%S.%f') + spacer + ' since_init:' + since_init + ' hb:' + hb + ' since_prev:' + since_prev)
+        self.last_heartbeat_at = now
+        self.heartbeat_count += 1
+
       self.send_update(self.current_endpoint)
 
   # receive a signal from OBS.
