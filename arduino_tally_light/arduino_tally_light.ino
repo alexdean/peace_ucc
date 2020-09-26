@@ -14,9 +14,9 @@ int redPin = 9;
 int greenPin = 12;
 
 // polling management
-// expect a heartbeat every 4s to prevent interruptions.
-// STALE value should be hb interval * 2 to prevent false shutdowns
-const unsigned long HEARTBEAT_STALE = 8000;
+// expect a heartbeat every 3s to prevent interruptions.
+// STALE value should be at least (hb interval * 2) to prevent false shutdowns
+const unsigned long HEARTBEAT_STALE = 9000;
 unsigned long now;
 unsigned long last_received_at = 0;
 

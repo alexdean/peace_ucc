@@ -18,7 +18,7 @@ def script_load(settings):
   client.connect('source_activate', '/GREEN')
   client.connect('source_deactivate', '/RED')
   client.set_current('/RED')
-  client.begin_heartbeats(interval=4000)
+  client.begin_heartbeats(interval=3000)
 
 def script_unload():
   global client
