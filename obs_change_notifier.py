@@ -1,4 +1,5 @@
 import urllib.request
+from datetime import datetime
 
 # watch a given source in OBS, and notify an HTTP service when OBS emits signals
 # related to that source.
@@ -94,5 +95,11 @@ class OBSChangeNotifier:
     try:
       request = urllib.request.Request(url, data=data, method=method)
       urllib.request.urlopen(request, None, 1)
-    except urllib.error.URLError as e:
-      self.obs.script_log(self.obs.LOG_INFO, 'ERROR: ' + url)
+    except (urllib.error.URLError, socket.timeout) as e:
+      log(url, 'ERROR')
+
+  # write a message to obs script log
+  # always use INFO level to prevent OBS from popping up the script log console
+  # (which steals focus and makes it harder to solve whatever is triggering the errors.)
+  def log(message, level):
+    self.obs.script_log(self.obs.LOG_INFO, datetime.now().strftime('%H:%M:%S.%f') + ' [' + level + '] ' + message)
