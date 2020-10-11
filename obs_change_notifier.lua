@@ -1,6 +1,8 @@
 local export = {}
 local obs = require 'obslua'
-local curl = require 'lcurl.safe'
+-- local curl = require 'lcurl.safe'
+local http = require 'socket.http'
+local url = require 'socket.url'
 
 watched_source = ''
 current_url = ''
@@ -65,15 +67,30 @@ end
 function export.http_request(url)
   url_type = type(url)
   if url_type == 'string' then
-    export.http_get(url)
+    export.http_get_luasocket(url)
   elseif url_type == 'table' then
-    export.http_post(url[1], url[2])
+    export.http_post_luasocket(url[1], url[2])
   else
     error('unable to make request. url is of type ' .. url_type)
   end
 end
 
-function export.http_get(url)
+function export.http_get_luasocket(url)
+  http.request(url)
+end
+
+function export.http_post_luasocket(url, params)
+  body = ''
+
+  for key, value in pairs(params)
+  do
+    body = body .. key .. '=' .. value .. '&'
+  end
+
+  http.request(url, body)
+end
+
+function export.http_get_curl(url)
   req = curl.easy{url = url}
   if req:perform() then
     req:close()
@@ -82,7 +99,7 @@ function export.http_get(url)
   end
 end
 
-function export.http_post(url, params)
+function export.http_post_curl(url, params)
   req = curl.easy()
   req:setopt_url(url)
 
